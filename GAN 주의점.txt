@@ -1,3 +1,0 @@
-1. Convolution Layer를 적용할 시 모든 Generator가 똑같게 나오는 현상이 일어남.
-2. Convolutina을 사용하려면 DCGAN을 사용해야?
-3. Dropout은 Generator에서 사용할 시 값이 이상하게 나오는 듯
