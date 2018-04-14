@@ -16,3 +16,10 @@ You can initialize this repository with code from a Subversion, Mercurial, or TF
 git pull origin master
 
 git rm -r '파일이름'
+
+git log
+git log -p -2
+git log --pretty=oneline
+git log --pretty=format:'%h = %an, %ar : %s'
+
+
