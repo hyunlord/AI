@@ -16,7 +16,7 @@ def next_batch(num, data, labels):
 
     return np.asarray(data_shuffle), np.asarray(labels_shuffle)
 
-total_epoch = 25
+total_epoch = 50
 batch_size = 100
 learning_rate = 0.001
 
@@ -24,33 +24,46 @@ X = tf.placeholder(tf.float32, [None, 32, 32, 3])
 Y = tf.placeholder(tf.float32, [None, 10])
 keep_prob = tf.placeholder(tf.float32)
 
-filter_1 = tf.Variable(tf.random_normal([5, 5, 3, 36], stddev = 0.01))
-filter_2 = tf.Variable(tf.random_normal([5, 5, 36, 96], stddev = 0.01))
+filter_1 = tf.Variable(tf.random_normal([5, 5, 3, 64], stddev = 0.01))
+filter_2 = tf.Variable(tf.random_normal([5, 5, 64, 64], stddev = 0.01))
+filter_3 = tf.Variable(tf.random_normal([5, 5, 64, 128], stddev = 0.01))
+filter_4 = tf.Variable(tf.random_normal([5, 5, 128, 128], stddev = 0.01))
+filter_5 = tf.Variable(tf.random_normal([5, 5, 128, 256], stddev = 0.01))
 
-W1 = tf.Variable(tf.random_normal([8 * 8 * 96, 900], stddev = 0.01))
-W2 = tf.Variable(tf.random_normal([900, 400], stddev = 0.01))
-W3 = tf.Variable(tf.random_normal([400, 100], stddev = 0.01))
-W4 = tf.Variable(tf.random_normal([100, 10], stddev = 0.01))
+W1 = tf.Variable(tf.random_normal([8 * 8 * 256, 400], stddev = 0.01))
+W2 = tf.Variable(tf.random_normal([400, 100], stddev = 0.01))
+W3 = tf.Variable(tf.random_normal([100, 10], stddev = 0.01))
 
-B1 = tf.Variable(tf.random_normal([900], stddev = 0.01))
-B2 = tf.Variable(tf.random_normal([400], stddev = 0.01))
-B3 = tf.Variable(tf.random_normal([100], stddev = 0.01))
-B4 = tf.Variable(tf.random_normal([10], stddev = 0.01))
+B1 = tf.Variable(tf.random_normal([400], stddev = 0.01))
+B2 = tf.Variable(tf.random_normal([100], stddev = 0.01))
+B3 = tf.Variable(tf.random_normal([10], stddev = 0.01))
 
 conv_1 = tf.nn.conv2d(X, filter_1, strides = [1, 1, 1, 1], padding = 'SAME')
 conv_1 = tf.nn.relu(conv_1)
 conv_1 = tf.nn.dropout(conv_1, keep_prob)
-conv_1 = tf.nn.max_pool(conv_1, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1],
-                         padding = 'SAME')
 
 conv_2 = tf.nn.conv2d(conv_1, filter_2, strides = [1, 1, 1, 1], padding = 'SAME')
 conv_2 = tf.nn.relu(conv_2)
 conv_2 = tf.nn.dropout(conv_2, keep_prob)
 conv_2 = tf.nn.max_pool(conv_2, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1],
                          padding = 'SAME')
-conv_2 = tf.reshape(conv_2, [-1, 8 * 8 * 96])
 
-layer_1 = tf.matmul(conv_2, W1) + B1
+conv_3 = tf.nn.conv2d(conv_2, filter_3, strides = [1, 1, 1, 1], padding = 'SAME')
+conv_3 = tf.nn.relu(conv_3)
+conv_3 = tf.nn.dropout(conv_3, keep_prob)
+
+conv_4 = tf.nn.conv2d(conv_3, filter_4, strides = [1, 1, 1, 1], padding = 'SAME')
+conv_4 = tf.nn.relu(conv_4)
+conv_4 = tf.nn.dropout(conv_4, keep_prob)
+conv_4 = tf.nn.max_pool(conv_4, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1],
+                         padding = 'SAME')
+
+conv_5 = tf.nn.conv2d(conv_4, filter_5, strides = [1, 1, 1, 1], padding = 'SAME')
+conv_5 = tf.nn.relu(conv_5)
+conv_5 = tf.nn.dropout(conv_5, keep_prob)
+conv_5 = tf.reshape(conv_5, [-1, 8 * 8 * 256])
+
+layer_1 = tf.matmul(conv_5, W1) + B1
 layer_1 = tf.nn.relu(layer_1)
 layer_1 = tf.nn.dropout(layer_1, keep_prob)
 
@@ -58,11 +71,7 @@ layer_2 = tf.matmul(layer_1, W2) + B2
 layer_2 = tf.nn.relu(layer_2)
 layer_2 = tf.nn.dropout(layer_2, keep_prob)
 
-layer_3 = tf.matmul(layer_2, W3) + B3
-layer_3 = tf.nn.relu(layer_3)
-layer_3 = tf.nn.dropout(layer_3, keep_prob)
-
-model = tf.matmul(layer_3, W4) + B4
+model = tf.matmul(layer_2, W3) + B3
 
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
         logits = model, labels = Y))
@@ -83,7 +92,7 @@ with tf.Session() as sess:
             batch = next_batch(batch_size, x_train, y_train_one_hot.eval())
         
             _, loss = sess.run([optimizer, cost], feed_dict = {
-                    X : batch[0], Y : batch[1], keep_prob : 0.7})
+                    X : batch[0], Y : batch[1], keep_prob : 0.8})
             total_cost += loss
             
         print('Epoch : ', '%04d' % (epoch + 1),
